@@ -16,7 +16,7 @@ class CreateTables extends Migration
 		Schema::create('user', function($table){
 			$table->increments('id');
 			$table->string('name');
-			$table->string('passwor');
+			$table->string('password');
 			$table->string('type');
 			$table->timestamps();
 		});
@@ -77,11 +77,15 @@ class CreateTables extends Migration
      */
     public function down()
     {
+		Schema::drop('user_office');
+		Schema::drop('data');
+		Schema::drop('category');
+		
 		Schema::drop('user');
 		Schema::drop('office');
 		Schema::drop('semester');
-		Schema::drop('category');
-		Schema::drop('data');
-		Schema::drop('user_office');
+
+
+
     }
 }
