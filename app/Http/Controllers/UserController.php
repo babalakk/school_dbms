@@ -19,6 +19,7 @@ class UserController extends Controller
 			
 			Session::put('user_name', $user->name);
 			Session::put('user_id', $user->id);
+			Session::put('user_type', $user->type);
 			
 			return redirect('main');
 		}
@@ -26,5 +27,14 @@ class UserController extends Controller
 		{
 			return view('login',['msg'=>'帳號/密碼輸入錯誤']);
 		}
+    }
+    public function logout(Request $request)
+    {
+		
+		Session::forget('user_name');
+		Session::forget('user_id');
+		Session::forget('user_type');
+		
+		return redirect('/login');
     }
 }

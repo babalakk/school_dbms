@@ -5,12 +5,7 @@
 </head>
 
 <body>
-
-<div id="wrapper">
-	<header id="top">
-	<p id="header1">國立臺灣師範大學學務處資料管理系統</p>
-  </header>
-</div>
+@include('includes.header')
 <div>
 <form action='login' method='post'>
   <ul id="login">

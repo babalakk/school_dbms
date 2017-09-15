@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>國立臺灣師範大學學務處資料管理系統</title>
+<link href="style.css" rel="stylesheet" type="text/css">
+<style type="text/css">
+@import url("//fonts.googleapis.com/earlyaccess/notosanstc.css");
+</style>
+<link href="jQueryAssets/jquery.ui.core.min.css" rel="stylesheet" type="text/css">
+<link href="jQueryAssets/jquery.ui.theme.min.css" rel="stylesheet" type="text/css">
+<link href="jQueryAssets/jquery.ui.button.min.css" rel="stylesheet" type="text/css">
+<script src="jQueryAssets/jquery-1.11.1.min.js"></script>
+<script src="jQueryAssets/jquery.ui-1.10.4.button.min.js"></script>
+</head>
+
+<body id="ct-new">
+<div id="ud-wr">
+	<header id="ud-tp">
+		<p>上傳檔案</p>
+  </header>
+</div>
+<div id="ud-mn">
+<ul class="ud-bc">
+	<li>學務處</li>
+	<li>生活輔導組</li>
+	<li>大分類</li>
+	<li>小分類</li>
+  </ul>
+<input type="text" placeholder="檔案名稱" class="ud-name">
+<a href="javascript:;" class="file">選擇檔案
+    <input type="file" name="" id="">
+</a>
+<script type="text/javascript">
+$(".file").on("change","input[type='file']",function(){
+    var filePath=$(this).val();
+    if(filePath.indexOf("jpg")!=-1 || filePath.indexOf("png")!=-1){
+        $(".fileerrorTip").html("").hide();
+        var arr=filePath.split('\\');
+        var fileName=arr[arr.length-1];
+        $(".showFileName").html(fileName);
+    }else{
+        $(".showFileName").html("");
+        $(".fileerrorTip").html("您未上傳文件，或您上傳的文件有誤！").show();
+        return false 
+    }
+});
+   </script>
+<button type="submit" class="ud-upload">確認上傳</button>
+	</div>
+</body>
+</html>

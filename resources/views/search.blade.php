@@ -6,13 +6,7 @@
 
 <body>
 
-<div id="wrapper">
-	<header id="top">
-		<a herf=""><p id="header1">國立臺灣師範大學學務處資料管理系統</p></a>
-		<p class="user">user</p>
-		<p class="grt">你好</p>
-  </header>
-</div>
+@include('includes.header')
 	<div>
 	  <ul id="searching">
 		<input type="text" placeholder="請輸入關鍵字" class="shbk">
