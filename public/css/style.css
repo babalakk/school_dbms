@@ -1,5 +1,6 @@
 ﻿@charset "utf-8";
 body {
+	height:900px;
 	margin-top: -20px;
 	margin-right: 0px;
 	margin-left: 0px;
@@ -441,11 +442,13 @@ body {
 	padding-left: 1px;
 }
 #category {
+	height: 100%;
 	width: 25%;
 	float: left;
 }
 
 #category .sb-wrapper {
+	height: 100%;
 	border-left-width: 0px;
 	border-right: thin solid #D3D3D3;
 	border-bottom-width: 0px;
@@ -612,6 +615,7 @@ ul .sb-lvl-1-cat .sb-lv2 {
 	display: none;
 }
 #ct-main {
+	height: 100%;
 	width: 70%;
 	float: right;
 	display: block;
@@ -663,6 +667,7 @@ ul .sb-lvl-1-cat .sb-lv2 {
 	padding-right: 10%;
 }
 #ct-main #ct-ct {
+	height:100%;
 	margin-top: 5%;
 	padding-left: 5%;
 }

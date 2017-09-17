@@ -3,91 +3,114 @@
 <head>
 	@include('includes.head')
 </head>
-
 <body>
+<script>
+function checkForm()
+{
+	if( $('#pw1').val() != $('#pw2').val() )
+	{
+		alert('確認密碼錯誤，請再輸入一次');
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+function change_pw(id)
+{
+	$( ('#tr_'+id) ).children('.pw').html('<input id="new_pw" type="password" name="new_password">');
+	$( ('#tr_'+id) ).children('.ch_pw').html('<input type="submit" value="確認">');
+}
+</script>
+
 
 @include('includes.header')
 <div id="user">
-<div id="ur-bn">
-<button type="submit" class="ur-ct">新建</button>
-	</div>
-	</div>
-<div id="user-lt">
-	<div id="urlt">
-	<div class="urlt-tr">
-			<div class="urlt-td">
-				<span style="font-size:15px; width: 100px; margin: 5px">行政人員</span>
-				</div>
-			<div class="urlt-td">
-			<span style="font-size:15px; width: 100px; margin: 5px">生活輔導組</span>
-				</div>
-			<div class="urlt-td">
-				<span style="font-size:15px; width: 100px; margin: 5px">使用者帳號</span>
-				</div>
-			<div class="urlt-td">
-				<span style="font-size:15px; width: 100px; margin: 5px">***********</span>
-				</div>
-			<div class="urlt-td">
-			<span style="font-size:15px; width: 100px; margin: 5px">更改密碼</span>
-				</div>
-			<div class="urlt-td">
-				<button type="submit" class="ur-delete" style="">刪除使用者</button>
-				</div>
-	</div>
-	<div class="urlt-tr">
-			<div class="urlt-td">
-				<span style="font-size:15px; width: 100px; margin: 5px">行政人員</span>
-				</div>
-			<div class="urlt-td">
-			<span style="font-size:15px; width: 100px; margin: 5px">生活輔導組</span>
-				</div>
-			<div class="urlt-td">
-				<span style="font-size:15px; width: 100px; margin: 5px">使用者帳號</span>
-				</div>
-			<div class="urlt-td">
-				<span style="font-size:15px; width: 100px; margin: 5px">1234567890</span>
-				</div>
-			<div class="urlt-td">
-			<span style="font-size:15px; width: 100px; margin: 5px">確定</span>
-				</div>
-			<div class="urlt-td">
-				<button type="submit" class="ur-delete" style="">刪除使用者</button>
-				</div>
-	</div>
-		<div class="urlt-tr">
-			<div class="urlt-td">
-				<select style="font-size:15px; font-family: 'Noto Sans TC Regular', 'Noto Sans TC Medium', 'Noto Sans TC Light';">
-					<option value="">行政人員</option>
-　					<option value="">教師</option>
-　					<option value="">學生</option>
-　					<option value="">管理員</option>
-				</select>
-				</div>
-			<div class="urlt-td">
-			<select style="font-size:15px; font-family: 'Noto Sans TC Regular', 'Noto Sans TC Medium', 'Noto Sans TC Light';">
-					<option value="">生活輔導組</option>
-　					<option value="">課外活動指導組</option>
-　					<option value="">公館學務組</option>
-　					<option value="">學輔中心</option>
-　					<option value="">健康中心</option>
-　					<option value="">專責導師室</option>
-　					<option value="">全人教育中心</option>
-				</select>
-				</div>
-			<div class="urlt-td">
-			<input type="text" placeholder="請輸入帳號" style="font-size:15px;" id="ur-ac">
-				</div>
-			<div class="urlt-td">
-			<input type="text" placeholder="請輸入密碼" style="font-size:15px;" id="ur-pw">
-				</div>
-			<div class="urlt-td">
-			<input type="text" placeholder="再次輸入密碼" style="font-size:15px" id="ur-cpw">
-				</div>
-			<div class="urlt-td">
-				<button type="submit" id="ur-create">確認建立</button>
-				</div>
-	</div>
+	<div id="ur-bn">
+		<button onclick='$("#user_form").show()' type="submit" class="ur-ct">新建</button>
 	</div>
 </div>
+<div id="user-lt">
+	<div id="urlt">
+		<div class="urlt-tr" style="background-color:#5DBCD0;">
+			<div class="urlt-td"><span style="font-size:15px; width: 100px; margin: 5px"><strong>類型</strong></span></div>
+			<div class="urlt-td"><span style="font-size:15px; width: 100px; margin: 5px"><strong>處室</strong></span></div>
+			<div class="urlt-td"><span style="font-size:15px; width: 100px; margin: 5px"><strong>帳號</strong></span></div>
+			<div class="urlt-td"><span style="font-size:15px; width: 100px; margin: 5px"><strong>密碼</strong></span></div>
+			<div class="urlt-td"><span style="font-size:15px; width: 100px; margin: 5px"></span></div>
+			<div class="urlt-td"><span style="font-size:15px; width: 100px; margin: 5px"></span></div>
+		</div>
+		<form id='user_form' method='POST' action='/setting/add_user' style='display:none;' onsubmit='return checkForm();' >
+			<div class="urlt-tr">
+				<div class="urlt-td">
+					<select name='user_type' style="font-size:15px; font-family: 'Noto Sans TC Regular', 'Noto Sans TC Medium', 'Noto Sans TC Light';">
+						<option value="user">行政人員</option>
+	　					<option value="admin">處室管理員</option>
+					</select>
+					</div>
+				<div class="urlt-td">
+					<select name='user_office' style="font-size:15px; font-family: 'Noto Sans TC Regular', 'Noto Sans TC Medium', 'Noto Sans TC Light';">
+						@foreach($offices as $o)
+							<option value="{{ $o->value }}">{{ $o->value }}</option>
+						@endforeach
+					</select>
+				</div>
+				<div class="urlt-td">
+					<input name='user_name' type="text" placeholder="請輸入帳號" style="font-size:15px;" id="ur-ac" required>
+				</div>
+				<div class="urlt-td">
+					<input id='pw1' name='user_password' type="password" placeholder="請輸入密碼" style="font-size:15px;" id="ur-pw" required>
+				</div>
+				<div class="urlt-td">
+					<input id='pw2' type="password" placeholder="再次輸入密碼" style="font-size:15px" id="ur-cpw" required>
+				</div>
+				<div class="urlt-td">
+					<button id="ur-create">確認建立</button>
+				</div>
+			</div>
+			{{ csrf_field() }}
+			<br>
+			<br>
+		</form>
+				
+		@foreach($users as $u_key => $u)
+		<form method='POST' action='/setting/change_password/{{$u["data"]->id}}'>
+			<div class="urlt-tr" id="tr_{{$u['data']->id}}">
+				<div class="urlt-td">
+					<span style="font-size:15px; width: 100px; margin: 5px">
+						@php
+							switch( $u['data']->type )
+							{
+								case 'user':
+									echo '行政人員';
+									break;
+								case 'admin':
+									echo '處室管理員';
+									break;
+								case 'superadmin':
+									echo '超級管理員';
+									break;
+							}
+						@endphp
+					</span>
+				</div>
+				<div class="urlt-td"><span style="font-size:15px; width: 100px; margin: 5px">{{ $u['office'] }}</span></div>
+				<div class="urlt-td"><span style="font-size:15px; width: 100px; margin: 5px">{{ $u['data']->name }}</span></div>
+				<div class="urlt-td pw"><span style="font-size:15px; width: 100px; margin: 5px">*********</span></div>
+				<div class="urlt-td ch_pw"><button onclick='change_pw({{$u["data"]->id}})' style="font-size:15px; width: 100px; margin: 5px">更改密碼</button></div>
+				<div class="urlt-td">
+					@if( $u['data']->type != Session::get('user_type') )
+						<button onclick="window.location='/setting/delete_user/{{ $u['data']->id }}'" type="submit" class="ur-delete" style="">刪除使用者</button>
+					@endif
+				</div>
+			</div>
+		{{ csrf_field() }}
+		</form>
+		@endforeach		
+	</div>
+</div>
+
 </body>
 </html>

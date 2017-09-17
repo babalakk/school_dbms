@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\user;
+use App\user_office;
+use App\office;
+use App\semester;
 
 use Session;
 
@@ -21,6 +24,36 @@ class UserController extends Controller
 			Session::put('user_id', $user->id);
 			Session::put('user_type', $user->type);
 			
+			
+			/* check semester */
+			$y = 0;
+			$m = 0;
+			$date_y = intval(date('Y'));
+			$date_m = intval(date('m'));
+			if($date_m==1)
+			{
+				$y = $date_y - 1912;
+				$m = 2;
+			}
+			else if($date_m>=2 && $date_m<=7)
+			{
+				$y = $date_y - 1911;
+				$m = 1;
+			}
+			else if($date_m >=8 && $date_m<=12)
+			{
+				$y = $date_y - 1911;
+				$m = 2;
+			}
+
+			$s = semester::where('value',$y.'-'.$m)->first();
+			if(!$s)
+			{
+				$ns = new semester;
+				$ns->value = $y.'-'.$m;
+				$ns->save();
+			}			
+			
 			return redirect('main');
 		}
 		else
@@ -28,6 +61,7 @@ class UserController extends Controller
 			return view('login',['msg'=>'帳號/密碼輸入錯誤']);
 		}
     }
+	
     public function logout(Request $request)
     {
 		
@@ -37,4 +71,69 @@ class UserController extends Controller
 		
 		return redirect('/login');
     }
+	
+	public function setting()
+	{
+		$r = user::all();
+		$users = [];
+		foreach($r as $key => $u)
+		{
+			$users[$key]['data'] = $u;
+			$users[$key]['office'] = (user_office::where('user_id',$u->id)->first())['office'];
+		}
+		
+		$offices = office::all();
+		
+		return view('/setting',['users'=>$users,
+								'offices'=>$offices]);
+	}
+
+	public function addUser(Request $request)
+	{
+		$user = new user;
+		$user->type = $request['user_type'];
+		$user->name = $request['user_name'];
+		$user->password = md5($request['user_password']);
+		$user->save();
+		
+		$u_office = new user_office;
+		$u_office->office = $request['user_office'];
+		$u_office->user_id = $user->id;
+		$u_office->save();
+	
+		
+		return redirect('/setting');
+	}
+	
+	public function deleteUser($id)
+	{
+		if(!isset($id) && $id == '')
+		{
+			return redirect('/setting');
+		}
+		
+		$u_office = user_office::where('user_id',$id)->get();
+		foreach($u_office as $uo)
+		{
+			$uo->delete();
+		}
+		
+		$user = user::find($id);
+		if($user){$user->delete();}
+		
+		return redirect('/setting');
+	}
+	
+	public function changePassword(Request $request,$id)
+	{
+		$user = user::find($id);
+		if($user)
+		{
+			$user->password = md5($request['new_password']);
+			$user->save();
+		}
+		
+		return redirect('/setting');
+	}
+	
 }

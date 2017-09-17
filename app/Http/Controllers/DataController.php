@@ -2,12 +2,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use App\Http\Controllers\Controller;
 use App\data;
 use App\category;
 use App\user;
 use App\office;
 use App\user_office;
+use App\semester;
 
 use Session;
 
@@ -18,12 +22,23 @@ class DataController extends Controller
 		//if(Session::get('user_name')!='admin'&&Session::get('user_name')!='superadmin'){return redirect('main');}
 		
 		$tree = [];
-		$offices = user_office::where('user_id',Session::get('user_id'))->get();
+		$offices = [];
+		if( Session::get('user_type') == 'superadmin' )
+		{
+			$r = office::all();
+			foreach($r as $o){ array_push($offices,$o->value); }
+		}
+		else
+		{
+			$r = user_office::where('user_id',Session::get('user_id'))->get();
+			foreach($r as $o){ array_push($offices,$o->office); }
+		}
+		
 		foreach($offices as $key => $o)
 		{
-			$tree[$key]['name'] = $o->office;
+			$tree[$key]['name'] = $o;
 			$tree[$key]['categorys'] = [];
-			$categorys = category::where('office',$o->office)->where('parent_id','0')->get();
+			$categorys = category::where('office',$o)->where('parent_id','0')->get();
 			foreach($categorys as $key_c => $c)
 			{
 				$tree[$key]['categorys'][$key_c]['name'] = $c->name;
@@ -83,6 +98,74 @@ class DataController extends Controller
 	{
 		return view('new_office');
 	}
+		
+	public function newData($category_id)
+	{
+		$category = category::find($category_id);
+		$semesters = semester::orderBy('value','desc')->get();
+		return view('new_data',['category_id'=>$category_id,
+								'category_name'=>$category->name,
+								'semesters'=>$semesters]);
+	}		
+	
+	public function newFile($category_id)
+	{
+		$category = category::find($category_id);
+		$semesters = semester::orderBy('value','desc')->get();
+		return view('new_file',['category_id'=>$category_id,
+								'category_name'=>$category->name,
+								'semesters'=>$semesters]);
+	}	
+	
+	public function addFile(Request $request)
+	{
+		$file = Input::file('upload_file');
+		$extension = $file->getClientOriginalExtension();
+		$file_name = strval(time()).str_random(5).'.'.$extension;
+	
+		if (Input::hasFile('upload_file')) {
+			Storage::disk('public')->put($file_name,  File::get($file));
+			// echo "img upload success!";
+		} else {
+			// echo "img upload failed!";
+		}
+
+		$data = new data;
+		$data->category_id = $request['category_id'];
+		$data->semester = $request['semester'];
+		$data->name =  $request['name'];
+		$data->value = $file->getClientOriginalName();
+		$data->url = Storage::url($file_name);
+
+		$supported_image = array(
+			'gif',
+			'jpg',
+			'jpeg',
+			'png'
+		);
+		if (in_array(strtolower($extension), $supported_image)) {
+			$data->type = 'image';
+		} else {
+			$data->type = 'file';
+		}
+
+		$data->save();
+		
+		return redirect('/add');
+	}
+	
+	public function addData(Request $request)
+	{
+		$data = new data;
+		$data->category_id = $request['category_id'];
+		$data->semester = $request['semester'];
+		$data->name = $request['name'];
+		$data->value = $request['value'];
+		$data->type = 'text';
+		$data->save();
+		
+		return redirect('/add');
+	}
 	
 	public function addCategory(Request $request)
 	{
@@ -102,11 +185,11 @@ class DataController extends Controller
 			
 			$category->save();
 			
-			return '新增成功';
+			return redirect('/add');
 		}
 		else
 		{
-			return '新增失敗';
+			return redirect('/add');
 		}
 	}	
 	
@@ -118,11 +201,11 @@ class DataController extends Controller
 			$office->value = $request['new_office'];
 			$office->save();
 			
-			return '新增成功';
+			return redirect('/add');
 		}
 		else
 		{
-			return '新增失敗';
+			return redirect('/add');
 		}
 	}
 	
@@ -156,10 +239,23 @@ class DataController extends Controller
 		}
 		
 		$categorys = category::where('office',$office)->where('parent_id',0)->get();
-		foreach($categorys as $c){deleteCategory($c->id);}
+		foreach($categorys as $c){self::deleteCategory($c->id);}
 		user_office::where('office',$office)->delete();
 		office::where('value',$office)->delete();
 		
+		return redirect('/add');
+	}	
+	
+	public function deleteData($id)
+	{
+		$data = data::find($id);
+		if($data)
+		{
+			File::delete(substr($data->url, 1));
+			
+			$data->delete();
+		}
+
 		return redirect('/add');
 	}
 	

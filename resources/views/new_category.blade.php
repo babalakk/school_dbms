@@ -1,10 +1,3 @@
-<!doctype html>
-<html>
-<head>
-	@include('includes.head')
-</head>
-
-<body id="ct-new">
 <div id="nw-wr">
 	<header id="nw-tp">
 		<p>新增分類</p>
@@ -25,5 +18,3 @@
 		<button type="submit" class="nw-create">確認建立</button>
 	</form>
 </div>
-</body>
-</html>

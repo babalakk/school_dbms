@@ -45,6 +45,7 @@ class CreateTables extends Migration
 			$table->string('semester',100);
 			$table->string('name');
 			$table->string('value');
+			$table->string('url',1023);
 			$table->string('type');
 			$table->timestamps();
 		});		
