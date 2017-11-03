@@ -23,13 +23,34 @@ function change_pw(id)
 	$( ('#tr_'+id) ).children('.pw').html('<input id="new_pw" type="password" name="new_password">');
 	$( ('#tr_'+id) ).children('.ch_pw').html('<input type="submit" value="確認">');
 }
+function submit_pw(id)
+{
+	if( $(('#tr_'+id)).children('.pw').children('#new_pw').val()=='' )
+	{
+		alert('請輸入新密碼');
+		return false;	
+	}
+	else
+	{
+		return true;
+	}
+}
+function del_user(id,name)
+{
+	if(window.confirm("是否刪除 '"+ name +"' ？") == true){	
+		window.location ='/setting/delete_user/'+id;
+	}
+}
+
 </script>
 
 
 @include('includes.header')
+
+<h2 class='setting_title'>帳號管理</h2>
 <div id="user">
 	<div id="ur-bn">
-		<button onclick='$("#user_form").show()' type="submit" class="ur-ct">新建</button>
+		<button onclick='$("#user_form").show()' type="submit" class="ur-ct">新增使用者</button>
 	</div>
 </div>
 <div id="user-lt">
@@ -68,6 +89,7 @@ function change_pw(id)
 				</div>
 				<div class="urlt-td">
 					<button id="ur-create">確認建立</button>
+					<button type="button" onclick='$("#user_form").hide();'>取消</button>
 				</div>
 			</div>
 			{{ csrf_field() }}
@@ -76,7 +98,8 @@ function change_pw(id)
 		</form>
 				
 		@foreach($users as $u_key => $u)
-		<form method='POST' action='/setting/change_password/{{$u["data"]->id}}'>
+		@if($u['data']->type != 'superadmin' || Session::get('user_type') == 'superadmin' )
+		<form method='POST' action='/setting/change_password/{{$u["data"]->id}}' onsubmit="return submit_pw({{$u["data"]->id}});">
 			<div class="urlt-tr" id="tr_{{$u['data']->id}}">
 				<div class="urlt-td">
 					<span style="font-size:15px; width: 100px; margin: 5px">
@@ -102,12 +125,13 @@ function change_pw(id)
 				<div class="urlt-td ch_pw"><button onclick='change_pw({{$u["data"]->id}})' style="font-size:15px; width: 100px; margin: 5px">更改密碼</button></div>
 				<div class="urlt-td">
 					@if( $u['data']->type != Session::get('user_type') )
-						<button onclick="window.location='/setting/delete_user/{{ $u['data']->id }}'" type="submit" class="ur-delete" style="">刪除使用者</button>
+						<button type="button" onclick="del_user({{ $u['data']->id }},'{{ $u['data']->name }}')" class="ur-delete" style="">刪除使用者</button>
 					@endif
 				</div>
 			</div>
 		{{ csrf_field() }}
 		</form>
+		@endif
 		@endforeach		
 	</div>
 </div>

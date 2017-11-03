@@ -44,8 +44,9 @@ class CreateTables extends Migration
 			$table->integer('category_id')->unsigned();
 			$table->string('semester',100);
 			$table->string('name');
-			$table->string('value');
-			$table->string('url',1023);
+			$table->string('value')->nullable();
+			$table->string('file')->nullable();
+			$table->string('url',1023)->nullable();
 			$table->string('type');
 			$table->timestamps();
 		});		
@@ -85,8 +86,5 @@ class CreateTables extends Migration
 		Schema::drop('user');
 		Schema::drop('office');
 		Schema::drop('semester');
-
-
-
     }
 }

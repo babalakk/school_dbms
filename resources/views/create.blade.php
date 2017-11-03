@@ -7,16 +7,38 @@
 <body>
 <script>
 	var selected = null;
+	var getUrlParameter = function getUrlParameter(sParam) {
+		var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+        sURLVariables = sPageURL.split('&'),
+        sParameterName,
+        i;
+		for (i = 0; i < sURLVariables.length; i++) {
+			sParameterName = sURLVariables[i].split('=');
+			if (sParameterName[0] === sParam) {
+				return sParameterName[1] === undefined ? true : sParameterName[1];
+			}
+		}
+	};
+	var c_id = getUrlParameter('select');
 	$(function(){
-		
-		$('.hide').hide();
-		
 		$('.option').click(function(){
 			selected = $(this);
+			cid = $(this).attr('c_id');
 			$('.option').each(function(){
-				$(this).css('background-color','');
+				$(this).css('color','#555555');
 			});
-			$(this).css('background-color','gray');
+			$(this).css('color','#58B2DC');
+			$('#op_title').html($(this).html());
+			$('#add_category').show();			
+			$('#delete_entry').show();			
+			if(selected.hasClass('office')){
+				$('#ct-bn').hide();
+				$('#edit_entry').hide();
+			}else{
+				$('#ct-bn').show();
+				$('#edit_entry').show();			
+			}
+			$(this).siblings('label').click();
 		});
 		
 		$('#add_office').click(function(){
@@ -31,13 +53,12 @@
 					alert(thrownError);
 				}
 			});	
-		});
+		});		
 		
 		$('#add_category').click(function(){
 			office = '';
 			if(selected.hasClass('office')){office = selected.html();}
 			else {office = selected.parents('.sb-lv2').siblings('.office').html();}
-			
 			parent_id = selected.attr('p_id');
 			if (typeof parent_id === typeof undefined && parent_id === false) {parent_id = 0;}
 			$.ajax({
@@ -55,14 +76,21 @@
 		
 		$('#delete_entry').click(function()
 		{
-			if(selected.hasClass('office'))
-			{
-				window.location = '/add/delete_office/'+selected.html();
+			if(window.confirm("此動作將會刪除 '"+selected.html()+"' 與子分類，並清除分類裡的所有資料，此為無法回復的動作，請問是否繼續？") == true){			
+				if(selected.hasClass('office')){
+					window.location = '/add/delete_office/'+selected.html();
+				}else{
+					window.location = '/add/delete_category/'+selected.attr('c_id');
+				}
 			}
-			else
-			{
-				window.location = '/add/delete_category/'+selected.attr('c_id');
+		});
+		
+		$('#edit_entry').click(function(){
+			var new_name = prompt("請輸入新的名稱",selected.html());
+			if(new_name){
+				window.location = '/add/edit_category/'+selected.attr('c_id')+'/'+new_name;	
 			}
+			
 		});
 		
 		$("#new_data").click(function(){
@@ -77,21 +105,12 @@
 					alert(thrownError);
 				}
 			});	
-		});	
-		
-		$("#new_file").click(function(){
-			$.ajax({
-				url:'/add/new_file/'+selected.attr('c_id'),
-				type:'get',
-				success: function(data){
-					$('#ct-ct').html(data);
-				},
-				error: function(xhr,ajaxOptions,thrownError){
-					alert(xhr.status);
-					alert(thrownError);
-				}
-			});	
 		});
+		$('.hide').hide();
+		$( ('.option[c_id='+c_id+']') ).closest('.list').siblings('ul').css('display','block');
+		$( ('.option[c_id='+c_id+']') ).closest('.list').css('display','block');
+		$( ('.option[c_id='+c_id+']') ).closest('.list2').css('display','block');
+		$( ('.option[c_id='+c_id+']') ).click();
 	});
 	
 	function getData(type,id){
@@ -109,17 +128,44 @@
 			}
 		});	
 	}
+	
+	function editData(id){
+		$.ajax({
+			url:'/add/edit/'+id,
+			type:'get',
+			dataType:'html',
+			success: function(data){
+				$('#ct-ct').html(data);
+			},
+			error: function(xhr,ajaxOptions,thrownError){
+				alert(xhr.status);
+				alert(thrownError);
+			}
+		});	
+	}
 </script>
-
 @include('includes.header')
-
 <div id="category">
 	<aside class="sb-wrapper">
+		@if(Session::get('user_type') == 'superadmin' )
 		<div id="cy-bn">
-			<button id="add_office" type="submit" class="cy-ct">新建處室</button>
-			<button id="add_category" type="submit" class="cy-ct">新建分類</button>
-			<button id="delete_entry" type="submit" class="cy-dt">刪除分類/處室</button>
+			<div style="width:100%;height:30px;">
+				<button id="add_office" type="submit" class="cy-ct" style="display:inline-block;float:left;">新建處室</button>
+				<button id="add_category" type="submit" class="cy-ct" style="display:none;float:left;margin-left:10px;">新建分類</button>
+			</div>
+			<div>
+				<button id="delete_entry" type="submit" class="cy-dt" style="color:red;display:none;margin-right:5px;">刪除所選分類/處室</button>
+				<button id="edit_entry" type="submit" class="cy-dt" style="display:none;">編輯名稱</button>
+			</div>
 		</div>
+		@elseif(Session::get('user_type') == 'admin' )
+		<div id="cy-bn">
+			<div style="width:100%;height:30px;">
+				<button id="add_category" type="submit" class="cy-ct" style="display:none;float:left;">新建分類</button>
+				<button id="delete_entry" type="submit" class="cy-dt" style="color:red;display:none;float:left;margin-left:10px;">刪除分類</button>
+			</div>			
+		</div>
+		@endif
 		<div>
 		@foreach($offices as $o_key => $office)
 			<ul>
@@ -128,13 +174,13 @@
 					<label for="sb-cat-{{$o_key}}">&nbsp;</label>
 					<a class='option office' onclick=getData("office","{{$office['name']}}") >{{$office['name']}}</a>
 					@foreach($office['categorys'] as $c_key => $category)
-						<ul class="sb-lv2">
+						<ul class="sb-lv2 list">
 							<li name="big-cat" class="sb-lvl-2-cat ">
 								<input type="checkbox" id="sb-cat{{$o_key+1}}-{{$c_key}}" class='hide'>
 								<label for="sb-cat{{$o_key+1}}-{{$c_key}}">&nbsp;</label>
 								<a class='option' p_id='{{$category["id"]}}' c_id='{{$category["id"]}}' onclick='getData("category","{{$category["id"]}}")'>{{$category['name']}}</a>
 								@foreach($category['child'] as $subc_key => $child)
-								<ul class="sb-lv3">
+								<ul class="sb-lv3 list2">
 									<li name="small-cat" class="sb-lvl-3-cat ">
 										<a class='option' p_id='{{$category["id"]}}' c_id='{{$child["id"]}}' onclick='getData("category","{{$child["id"]}}")'>{{$child['name']}}</a>
 									</li>
@@ -150,11 +196,14 @@
 	</aside>
 </div>
 <div id="ct-main">
-	<div id="ct-bn">
-		<button id="new_data" type="submit" class="ct-ct">新建</button>
-		<button id="new_file" type="submit" class="ct-ud">上傳</button>
+	<div style="padding-top:10px;padding-left:10px;">
+		<span id='op_title' style="font:30px bold;color:gray;"></span>
+		<div id="ct-bn" style="display:none;">
+			<button id="new_data" type="submit" class="ct-ud">新增資料</button>
+		</div>
 	</div>
 	<div id="ct-ct">
+		<span id='ct_default_text' >請選擇左側分類</span>
 		<iframe id="ct_frame" style='width:100%;height:100%;' frameborder="0" >
 		
 		</iframe>

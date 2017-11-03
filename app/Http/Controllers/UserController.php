@@ -74,12 +74,26 @@ class UserController extends Controller
 	
 	public function setting()
 	{
+		if(Session::get('user_type') != 'superadmin' )
+		{
+			$admin_office = (user_office::where('user_id',Session::get('user_id'))->first())['office'];
+		}
+		else
+		{
+			$admin_office = '';
+		}
 		$r = user::all();
 		$users = [];
 		foreach($r as $key => $u)
 		{
+			$office = (user_office::where('user_id',$u->id)->first())['office'];
+			if($admin_office && $admin_office != $office)
+			{
+				continue;
+			}
+			
 			$users[$key]['data'] = $u;
-			$users[$key]['office'] = (user_office::where('user_id',$u->id)->first())['office'];
+			$users[$key]['office'] = $office;
 		}
 		
 		$offices = office::all();

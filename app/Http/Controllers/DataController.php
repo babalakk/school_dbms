@@ -108,63 +108,103 @@ class DataController extends Controller
 								'semesters'=>$semesters]);
 	}		
 	
-	public function newFile($category_id)
-	{
-		$category = category::find($category_id);
-		$semesters = semester::orderBy('value','desc')->get();
-		return view('new_file',['category_id'=>$category_id,
-								'category_name'=>$category->name,
-								'semesters'=>$semesters]);
-	}	
-	
-	public function addFile(Request $request)
-	{
-		$file = Input::file('upload_file');
-		$extension = $file->getClientOriginalExtension();
-		$file_name = strval(time()).str_random(5).'.'.$extension;
-	
-		if (Input::hasFile('upload_file')) {
-			Storage::disk('public')->put($file_name,  File::get($file));
-			// echo "img upload success!";
-		} else {
-			// echo "img upload failed!";
-		}
-
-		$data = new data;
-		$data->category_id = $request['category_id'];
-		$data->semester = $request['semester'];
-		$data->name =  $request['name'];
-		$data->value = $file->getClientOriginalName();
-		$data->url = Storage::url($file_name);
-
-		$supported_image = array(
-			'gif',
-			'jpg',
-			'jpeg',
-			'png'
-		);
-		if (in_array(strtolower($extension), $supported_image)) {
-			$data->type = 'image';
-		} else {
-			$data->type = 'file';
-		}
-
-		$data->save();
-		
-		return redirect('/add');
-	}
-	
 	public function addData(Request $request)
 	{
 		$data = new data;
 		$data->category_id = $request['category_id'];
 		$data->semester = $request['semester'];
-		$data->name = $request['name'];
-		$data->value = $request['value'];
-		$data->type = 'text';
+		$data->name =  $request['name'];
+		$data->value =  $request['value'];		
+		
+		if (Input::hasFile('upload_file')) {
+			
+			$file = Input::file('upload_file');
+			$extension = $file->getClientOriginalExtension();
+			$file_name = strval(time()).str_random(5).'.'.$extension;
+			
+			Storage::disk('public')->put($file_name,  File::get($file));
+			// echo "img upload success!";
+			
+			$data->file = $file->getClientOriginalName();
+			$data->url = Storage::url($file_name);
+			
+			$supported_image = array(
+				'gif',
+				'jpg',
+				'jpeg',
+				'png'
+			);
+			if (in_array(strtolower($extension), $supported_image)) {
+				$data->type = 'image';
+			} else {
+				$data->type = 'file';
+			}
+		} else {
+			// echo "img upload failed!";
+			$data->type = 'text';
+		}
+
 		$data->save();
 		
-		return redirect('/add');
+		return redirect('/add?select='.$request['category_id']);
+	}
+		
+	public function editDataPage($id)
+	{
+		$data = data::find($id);
+		$category = category::find($data->category_id);
+		$semesters = semester::orderBy('value','desc')->get();
+		return view('edit_data',['data'=>$data,
+								'category_id'=>$data->category_id,
+								'category_name'=>$category->name,
+								'semesters'=>$semesters]);
+	}
+		
+	public function editData(Request $request,$id)
+	{
+		$data = data::find($id);
+		
+		if(!$data)
+		{
+			return 'no data found';
+		}
+		
+		$data->category_id = $request['category_id'];
+		$data->semester = $request['semester'];
+		$data->name =  $request['name'];
+		$data->value =  $request['value'];		
+		
+		if (Input::hasFile('upload_file')) {
+			
+			$file = Input::file('upload_file');
+			$extension = $file->getClientOriginalExtension();
+			$file_name = strval(time()).str_random(5).'.'.$extension;
+			
+			Storage::disk('public')->put($file_name,  File::get($file));
+			// echo "img upload success!";
+			
+			$data->file = $file->getClientOriginalName();
+			$data->url = Storage::url($file_name);
+			
+			$supported_image = array(
+				'gif',
+				'jpg',
+				'jpeg',
+				'png'
+			);
+			if (in_array(strtolower($extension), $supported_image)) {
+				$data->type = 'image';
+			} else {
+				$data->type = 'file';
+			}
+		} else {
+			// echo "img upload failed!";
+			$data->type = 'text';
+		}
+
+		$data->save();
+		
+		return redirect('/add?select='.$request['category_id']);
 	}
 	
 	public function addCategory(Request $request)
@@ -185,7 +225,7 @@ class DataController extends Controller
 			
 			$category->save();
 			
-			return redirect('/add');
+			return redirect('/add?select='.$category->id);
 		}
 		else
 		{
@@ -229,6 +269,20 @@ class DataController extends Controller
 		category::find($c_id)->delete();
 		
 		return redirect('/add');
+	}		
+	
+	public function editCategory($c_id,$new_name)
+	{
+		if(!isset($c_id) || $c_id == 0)
+		{
+			return redirect('/add');
+		}
+		
+		$c = category::find($c_id);
+		$c->name = $new_name;
+		$c->save();
+		
+		return redirect('/add');
 	}	
 	
 	public function deleteOffice($office)
@@ -259,5 +313,106 @@ class DataController extends Controller
 		return redirect('/add');
 	}
 	
+	public function search()
+	{
+		$offices = office::all();
+		$semesters = semester::all();
+		
+		return view('search',[ 'offices' => $offices,
+							   'semesters' => $semesters ]);
+	}	
 	
+	public function searchGet(Request $request)
+	{
+		$builder = data::select('data.id','data.semester','data.name','data.value','data.file','data.category_id','data.type','data.url','category.office');
+		$builder = $builder->leftJoin('category', 'data.category_id', '=', 'category.id');
+		
+		if( isset($request['keyword']) )
+		{
+			$builder = $builder->where(function($q)use($request){
+				$q->where('data.name','like','%'.$request['keyword'].'%')
+				->orWhere('data.value','like','%'.$request['keyword'].'%')
+				->orWhere('data.file','like','%'.$request['keyword'].'%');
+			});
+		}
+		
+		
+		if( isset($request['semester']) )
+		{
+			$builder = $builder->whereIn('semester',$request['semester']);
+		}
+		
+		if( isset($request['office']) )
+		{
+			$builder = $builder->whereIn('office',$request['office']);
+		}
+		
+		$count = $builder->count();
+		
+		if( isset($request['limit']) &&  isset($request['page']) )
+		{
+			$builder = $builder->offset( ($request['page']-1)*$request['limit'] )->limit( $request['limit'] );
+		}
+
+		// return $builder->toSql();
+		$result = $builder->get();
+		foreach($result as $key => $r)
+		{
+			$c = category::find($r->category_id);
+			if($c->parent_id == 0)
+			{
+				$result[$key]['category1'] = $c->name;
+				$result[$key]['category2'] = '';
+			}
+			else
+			{
+				$result[$key]['category1'] = (category::find($c->parent_id))->name ;
+				$result[$key]['category2'] = $c->name;
+			}
+		}
+		return view('search_data',[ 'data' => $result,
+									'limit' => $request['limit']?$request['limit']:30,
+									'page' => $request['page'],
+									'count' => $count ]);
+	}
+
+	public function searchExport(Request $request)
+	{
+		$builder = data::select('data.id','data.semester','data.name','data.value','data.category_id','category.office');
+		
+		if( isset($request['keyword']) )
+		{
+			$builder = $builder->where('data.name','like','%'.$request['keyword'].'%')->leftJoin('category', 'data.category_id', '=', 'category.id');
+		}
+		
+		if( isset($request['semester']) )
+		{
+			$builder = $builder->whereIn('semester',$request['semester']);
+		}
+		
+		if( isset($request['office']) )
+		{
+			$builder = $builder->whereIn('office',$request['office']);
+		}
+		
+		$builder = $builder->orderBy('semester','DESC')->orderBy('office','ASC')->orderBy('category_id','ASC')->orderBy('name','ASC');
+		
+		$result = $builder->get();
+		foreach($result as $key => $r)
+		{
+			$c = category::find($r->category_id);
+			if($c->parent_id == 0)
+			{
+				$result[$key]['category1'] = $c->name;
+				$result[$key]['category2'] = '';
+			}
+			else
+			{
+				$result[$key]['category1'] = (category::find($c->parent_id))->name ;
+				$result[$key]['category2'] = $c->name;
+			}
+		}
+		
+		return json_encode($result);
+	}
 }

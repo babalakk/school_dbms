@@ -6,15 +6,13 @@
 
 <body>
 @include('includes.header')
-	<div>
-		<ul id="mnin">
-			<a href="/search"><img src="/image/search.svg" alt="" width="281" class="mnsh"/></a>
-			<a href="/logout"><img src="/image/logout.svg" alt="" width="281" class="mnet"/></a>
-			<a href="/add"><img src="/image/add.svg" alt="" width="281" class="mnnw"/></a>
-			@if(Session::get('user_name')=='admin'||Session::get('user_name')=='superadmin')
-				<a href="/setting"><img src="/image/setting.svg" alt="" width="281" class="mnad"/></a>
-			@endif
-		</ul>
+	<div id='main_div'>
+		<a href="/add"><img class='m_pic' src="/image/add.png"class="mnnw"/><p>新增資料</p></a>
+		<a href="/search"><img class='m_pic' src="/image/search.png"  class="mnsh"/><p>搜尋資料</p></a>
+		@if(Session::get('user_type')=='admin'||Session::get('user_type')=='superadmin')
+			<a href="/setting"><img class='m_pic' src="/image/setting.png" class="mnad"/><p>系統管理</p></a>
+		@endif
+		<a href="/logout"><img class='m_pic' src="/image/logout.png" class="mnet"/><p>登出</p></a>
 	</div>
 </body>
 </html>
