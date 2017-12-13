@@ -6,20 +6,26 @@
 
 <table class="table-fill" id='data_table'>
 <tr>
-	<th width=50>學年度</th>
+	<th width=70>學年度</th>
+	<th width=50>年分</th>
+	<th width=50>月份</th>
 	<th width=120>處室</th>
-	<th width=160>大分類</th>
-	<th width=160>小分類</th>
-	<th width=160>資料名稱</th>
-	<th width=200>內容</th>
+	<th width=160>主分類</th>
+	<th width=160>子分類</th>
+	<th width=200>項目</th>
+	<th width=100>屬性</th>
+	<th width=100>內容</th>
 	<th width=150>檔案</th>
 </tr>
 @foreach ($data as $d)
 <tr>
 	<td>{{$d['semester'] }}</td>
+	<td>{{$d['year'] }}</td>
+	<td>{{$d['month'] }}</td>
 	<td>{{$d['office'] }}</td>
 	<td>{{$d['category1'] }}</td>
 	<td>{{$d['category2'] }}</td>
+	<td>{{$d['data_name'] }}</td>
 	<td>{{$d['name']}}</td>
 	<td>{{$d['value']}}</td>
 	<td>

@@ -22,6 +22,7 @@ class CreateTables extends Migration
 		});
 		Schema::create('office', function($table){
 			$table->string('value',100);
+			$table->integer('shared')->unsigned();
 			$table->timestamps();
 			
 			$table->primary('value');
@@ -43,12 +44,20 @@ class CreateTables extends Migration
 			$table->increments('id');
 			$table->integer('category_id')->unsigned();
 			$table->string('semester',100);
+			$table->integer('year')->unsigned();
+			$table->integer('month')->unsigned();
+			$table->string('name');
+			$table->timestamps();
+		});				
+		Schema::create('data_attribute', function($table){
+			$table->increments('id');
+			$table->integer('data_id')->unsigned();
 			$table->string('name');
 			$table->string('value')->nullable();
 			$table->string('file')->nullable();
 			$table->string('url',1023)->nullable();
 			$table->string('type');
-			$table->timestamps();
+			$table->timestamps();			
 		});		
 		Schema::create('user_office', function($table){
 			$table->integer('user_id')->unsigned();
@@ -65,6 +74,9 @@ class CreateTables extends Migration
 		Schema::table('data', function($table){
 			$table->foreign('category_id')->references('id')->on('category');
 			$table->foreign('semester')->references('value')->on('semester');
+		});			
+		Schema::table('data_attribute', function($table){
+			$table->foreign('data_id')->references('id')->on('data');
 		});		
 		Schema::table('user_office', function($table){
 			$table->foreign('user_id')->references('id')->on('user');
@@ -80,6 +92,7 @@ class CreateTables extends Migration
     public function down()
     {
 		Schema::drop('user_office');
+		Schema::drop('data_attribute');
 		Schema::drop('data');
 		Schema::drop('category');
 		

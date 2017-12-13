@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use App\Http\Controllers\Controller;
 use App\data;
+use App\data_attribute;
 use App\category;
 use App\user;
 use App\office;
@@ -32,6 +33,14 @@ class DataController extends Controller
 		{
 			$r = user_office::where('user_id',Session::get('user_id'))->get();
 			foreach($r as $o){ array_push($offices,$o->office); }
+			
+			$r = office::where('shared',1)->get();
+			foreach($r as $o){ 
+				if(!in_array($o->value,$offices,true))
+				{
+					array_push($offices,$o->value); 
+				}
+			}
 		}
 		
 		foreach($offices as $key => $o)
@@ -103,7 +112,9 @@ class DataController extends Controller
 	{
 		$category = category::find($category_id);
 		$semesters = semester::orderBy('value','desc')->get();
+		$attr_name_list = data_attribute::select('name')->groupby('name')->get();
 		return view('new_data',['category_id'=>$category_id,
+								'attr_name_list'=>$attr_name_list,
 								'category_name'=>$category->name,
 								'semesters'=>$semesters]);
 	}		
@@ -114,8 +125,20 @@ class DataController extends Controller
 		$data->category_id = $request['category_id'];
 		$data->semester = $request['semester'];
 		$data->name =  $request['name'];
-		$data->value =  $request['value'];		
+		$data->year =  $request['year'];		
+		$data->month =  $request['month'];	
+		$data->save();		
 		
+		foreach($request['attr_name'] as $key => $_)
+		{
+			$attr = new data_attribute;
+			$attr->data_id = $data->id;
+			$attr->name= $request['attr_name'][$key];
+			$attr->value= $request['attr_value'][$key];
+			$attr->type = 'text';
+			$attr->save();
+		}
+		/*
 		if (Input::hasFile('upload_file')) {
 			
 			$file = Input::file('upload_file');
@@ -143,8 +166,7 @@ class DataController extends Controller
 			// echo "img upload failed!";
 			$data->type = 'text';
 		}
-
-		$data->save();
+		*/
 		
 		return redirect('/add?select='.$request['category_id']);
 	}
@@ -154,7 +176,11 @@ class DataController extends Controller
 		$data = data::find($id);
 		$category = category::find($data->category_id);
 		$semesters = semester::orderBy('value','desc')->get();
+		$data_attr = data_attribute::where('data_id',$id)->get();
+		$attr_name_list = data_attribute::select('name')->groupby('name')->get();
 		return view('edit_data',['data'=>$data,
+								'data_attr'=>$data_attr,
+								'attr_name_list'=>$attr_name_list,
 								'category_id'=>$data->category_id,
 								'category_name'=>$category->name,
 								'semesters'=>$semesters]);
@@ -171,38 +197,25 @@ class DataController extends Controller
 		
 		$data->category_id = $request['category_id'];
 		$data->semester = $request['semester'];
-		$data->name =  $request['name'];
-		$data->value =  $request['value'];		
-		
-		if (Input::hasFile('upload_file')) {
-			
-			$file = Input::file('upload_file');
-			$extension = $file->getClientOriginalExtension();
-			$file_name = strval(time()).str_random(5).'.'.$extension;
-			
-			Storage::disk('public')->put($file_name,  File::get($file));
-			// echo "img upload success!";
-			
-			$data->file = $file->getClientOriginalName();
-			$data->url = Storage::url($file_name);
-			
-			$supported_image = array(
-				'gif',
-				'jpg',
-				'jpeg',
-				'png'
-			);
-			if (in_array(strtolower($extension), $supported_image)) {
-				$data->type = 'image';
-			} else {
-				$data->type = 'file';
-			}
-		} else {
-			// echo "img upload failed!";
-			$data->type = 'text';
-		}
-
+		$data->year =  $request['year'];		
+		$data->month =  $request['month'];	
 		$data->save();
+		
+		$old_attr = data_attribute::where('data_id',$data->id)->get();
+		foreach($old_attr as $a)
+		{
+			$a->delete();
+		}
+		
+		foreach($request['attr_name'] as $key => $_)
+		{
+			$attr = new data_attribute;
+			$attr->data_id = $data->id;
+			$attr->name= $request['attr_name'][$key];
+			$attr->value= $request['attr_value'][$key];
+			$attr->type = 'text';
+			$attr->save();
+		}
 		
 		return redirect('/add?select='.$request['category_id']);
 	}
@@ -239,6 +252,7 @@ class DataController extends Controller
 		{
 			$office = new office;
 			$office->value = $request['new_office'];
+			$office->shared = $request['shared']?1:0;
 			$office->save();
 			
 			return redirect('/add');
@@ -300,17 +314,32 @@ class DataController extends Controller
 		return redirect('/add');
 	}	
 	
-	public function deleteData($id)
+	public function deleteDataAttr($id)
 	{
+		$attr = data_attribute::find($id);
+		$attr->delete();
+		return ;
+	}
+	
+	public function deleteData($id)
+	{		
+		$attrs = data_attribute::where('data_id',$id)->get();
+		foreach($attrs as $a)
+		{
+			$a->delete();
+		}
+		
+		$cate_id = 0;
 		$data = data::find($id);
 		if($data)
 		{
+			$cate_id = $data->category_id;
 			File::delete(substr($data->url, 1));
 			
 			$data->delete();
 		}
 
-		return redirect('/add');
+		return redirect('/add?select='.$cate_id);
 	}
 	
 	public function search()
@@ -324,38 +353,51 @@ class DataController extends Controller
 	
 	public function searchGet(Request $request)
 	{
-		$builder = data::select('data.id','data.semester','data.name','data.value','data.file','data.category_id','data.type','data.url','category.office');
+		$builder = data_attribute::select('data_attribute.id'
+										,'data_attribute.data_id'
+										,'data_attribute.name'
+										,'data_attribute.value'
+										,'data_attribute.file'
+										,'data_attribute.type'
+										,'data.name AS data_name'
+										,'category_id'
+										,'office'
+										,'semester'
+										,'year'
+										,'month');
+		$builder = $builder->leftJoin('data', 'data_attribute.data_id', '=', 'data.id');
 		$builder = $builder->leftJoin('category', 'data.category_id', '=', 'category.id');
 		
+		// filter
 		if( isset($request['keyword']) )
 		{
 			$builder = $builder->where(function($q)use($request){
-				$q->where('data.name','like','%'.$request['keyword'].'%')
-				->orWhere('data.value','like','%'.$request['keyword'].'%')
-				->orWhere('data.file','like','%'.$request['keyword'].'%');
+				$q->where('data_attribute.name','like','%'.$request['keyword'].'%')
+				->orWhere('data_attribute.value','like','%'.$request['keyword'].'%')
+				->orWhere('data_attribute.file','like','%'.$request['keyword'].'%');
 			});
 		}
-		
-		
 		if( isset($request['semester']) )
 		{
 			$builder = $builder->whereIn('semester',$request['semester']);
 		}
-		
 		if( isset($request['office']) )
 		{
 			$builder = $builder->whereIn('office',$request['office']);
-		}
+		}			
+	
 		
+		// page
 		$count = $builder->count();
-		
 		if( isset($request['limit']) &&  isset($request['page']) )
 		{
 			$builder = $builder->offset( ($request['page']-1)*$request['limit'] )->limit( $request['limit'] );
 		}
-
-		// return $builder->toSql();
+		
+		//echo $builder->toSql();
 		$result = $builder->get();
+
+		
 		foreach($result as $key => $r)
 		{
 			$c = category::find($r->category_id);
@@ -370,10 +412,12 @@ class DataController extends Controller
 				$result[$key]['category2'] = $c->name;
 			}
 		}
+		
 		return view('search_data',[ 'data' => $result,
 									'limit' => $request['limit']?$request['limit']:30,
 									'page' => $request['page'],
 									'count' => $count ]);
+									
 	}
 
 	public function searchExport(Request $request)

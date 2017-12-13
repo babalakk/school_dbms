@@ -35,6 +35,7 @@ Route::get('/add/edit_category/{c_id}/{new_name}','DataController@editCategory')
 Route::get('/add/edit/{id}','DataController@editDataPage');
 Route::post('/add/edit_data/{id}','DataController@editData');
 Route::get('/add/delete_data/{id}','DataController@deleteData');
+Route::get('/add/delete_data_attr/{id}','DataController@deleteDataAttr');
 Route::get('/add/delete_office/{office}','DataController@deleteOffice');
 Route::get('/getdata','DataController@getData');
 
