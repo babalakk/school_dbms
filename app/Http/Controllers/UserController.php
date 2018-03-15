@@ -25,7 +25,8 @@ class UserController extends Controller
 			Session::put('user_type', $user->type);
 			
 			
-			/* check semester */
+			/* check semester and add new entry */
+			/*
 			$y = 0;
 			$m = 0;
 			$date_y = intval(date('Y'));
@@ -45,14 +46,14 @@ class UserController extends Controller
 				$y = $date_y - 1911;
 				$m = 2;
 			}
-
 			$s = semester::where('value',$y.'-'.$m)->first();
 			if(!$s)
 			{
 				$ns = new semester;
 				$ns->value = $y.'-'.$m;
 				$ns->save();
-			}			
+			}
+			*/			
 			
 			return redirect('main');
 		}
@@ -82,6 +83,11 @@ class UserController extends Controller
 		{
 			$admin_office = '';
 		}
+		
+		// get semester list
+		$semester = semester::all();
+		
+		// get user, office list
 		$r = user::all();
 		$users = [];
 		foreach($r as $key => $u)
@@ -95,11 +101,25 @@ class UserController extends Controller
 			$users[$key]['data'] = $u;
 			$users[$key]['office'] = $office;
 		}
-		
 		$offices = office::all();
 		
 		return view('/setting',['users'=>$users,
-								'offices'=>$offices]);
+								'offices'=>$offices,
+								'semester'=>$semester]);
+	}
+	
+	public function addSemester(Request $request)
+	{
+		//check duplicate
+		$value = $request['semester_year'].'-'.$request['semester_section'];
+		if(!semester::where('value','=',$value)->exists())
+		{
+			$semester = new semester;
+			$semester->value = $value;
+			$semester->save();
+		}
+		
+		return redirect('/setting');
 	}
 
 	public function addUser(Request $request)

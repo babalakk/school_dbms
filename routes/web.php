@@ -27,6 +27,7 @@ Route::get('/add','DataController@view');
 Route::get('/add/new_category/{office}/{parent_id}','DataController@newCategory');
 Route::get('/add/new_office','DataController@newOffice');
 Route::get('/add/new_data/{category_id}','DataController@newData');
+Route::post('/add/zip_upload','DataController@addZip');
 Route::post('/add/add_category','DataController@addCategory');
 Route::post('/add/add_office','DataController@addOffice');
 Route::post('/add/add_data','DataController@addData');
@@ -40,6 +41,7 @@ Route::get('/add/delete_office/{office}','DataController@deleteOffice');
 Route::get('/getdata','DataController@getData');
 
 Route::get('/setting','UserController@setting');
+Route::post('/setting/add_semester','UserController@addSemester');
 Route::post('/setting/add_user','UserController@addUser');
 Route::post('/setting/change_password/{id}','UserController@changePassword');
 Route::get('/setting/delete_user/{id}','UserController@deleteUser');

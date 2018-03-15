@@ -32,7 +32,7 @@
 		@if($d['type'] == 'text')
 
 		@elseif($d['type'] == 'file')
-			<a href='{{ $d["url"] }}' >{{$d["file"]}}</a>
+			<a href='{{$d["url"]}}' >{{$d["file"]}}</a>
 		@elseif($d["type"] == 'image')
 			<img src='{{ $d["url"] }}' width=150 height=100 >
 		@else

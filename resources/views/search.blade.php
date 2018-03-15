@@ -7,6 +7,9 @@
 <script>
 var office_filter = [];
 var semester_filter = [];
+var semester_year_filter = [];
+var year_filter = [];
+var month_filter = [];
 var page = 1;
 
 function search_fn()
@@ -17,6 +20,9 @@ function search_fn()
 		data: { 'keyword':$('#keyword').val(),
 				'office':office_filter,
 				'semester':semester_filter,
+				'semester_year':semester_year_filter,
+				'year':year_filter,
+				'month':month_filter,
 				'limit': $('#limit').val()?$('#limit').val():30,
 				'page': page },
 		dataType:'html',
@@ -44,7 +50,21 @@ function add(self,filter)
 		semester_filter.push(self.innerHTML);
 		$(self).attr('onclick','remove(this,"semester")');
 	}
-
+	else if(filter=='semester_year')
+	{
+		semester_year_filter.push(self.innerHTML);
+		$(self).attr('onclick','remove(this,"semester_year")');
+	}
+	else if(filter=='year')
+	{
+		year_filter.push(self.innerHTML);
+		$(self).attr('onclick','remove(this,"year")');
+	}
+	else if(filter=='month')
+	{
+		month_filter.push(self.innerHTML);
+		$(self).attr('onclick','remove(this,"month")');
+	}
 	$(self).addClass("selected");
 	search();
 }
@@ -59,6 +79,21 @@ function remove(self,filter)
 	{
 		semester_filter.splice( $.inArray(self.innerHTML, semester_filter), 1 );
 		$(self).attr('onclick','add(this,"semester")');
+	}
+	else if(filter=='semester_year')
+	{
+		semester_year_filter.splice( $.inArray(self.innerHTML, semester_year_filter), 1 );
+		$(self).attr('onclick','add(this,"semester_year")');
+	}
+	else if(filter=='year')
+	{
+		year_filter.splice( $.inArray(self.innerHTML, year_filter), 1 );
+		$(self).attr('onclick','add(this,"year")');
+	}
+	else if(filter=='month')
+	{
+		month_filter.splice( $.inArray(self.innerHTML, month_filter), 1 );
+		$(self).attr('onclick','add(this,"month")');
 	}
 	$(self).removeClass("selected");
 	search();
@@ -128,6 +163,28 @@ function excel(){
 		<button type="button" class="shyr filter_btn" onclick="add(this,'semester')">{{ $s->value }}</button>
 		@endforeach
 	</ul>
+	<div id='advance_searching'>
+		<ul class="searching">
+			<span class="h_shbn">指定學年：</span>
+			@foreach ($semesters_year as $sy)
+			<button type="button" class="shyr filter_btn" onclick="add(this,'semester_year')">{{ $sy }}</button>
+			@endforeach
+			<br>
+		</ul>
+		<ul class="searching">
+			<span class="h_shbn">指定年：</span>
+			@foreach ($year as $y)
+			<button type="button" class="shyr filter_btn" onclick="add(this,'year')">{{ $y->year }}</button>
+			@endforeach
+			<br>
+		</ul>
+		<ul class="searching">
+			<span class="h_shbn">指定月：</span>
+			@foreach ($month as $m)
+			<button type="button" class="shyr filter_btn" onclick="add(this,'month')">{{ $m->month }}</button>
+			@endforeach
+		</ul>
+	</div>
 </div>
 <div id='data'>
 </div>

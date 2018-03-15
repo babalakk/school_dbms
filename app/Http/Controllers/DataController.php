@@ -120,7 +120,7 @@ class DataController extends Controller
 	}		
 	
 	public function addData(Request $request)
-	{
+	{	
 		$data = new data;
 		$data->category_id = $request['category_id'];
 		$data->semester = $request['semester'];
@@ -129,46 +129,56 @@ class DataController extends Controller
 		$data->month =  $request['month'];	
 		$data->save();		
 		
+		$supported_image = array(
+			'gif',
+			'jpg',
+			'jpeg',
+			'png'
+		);
+		
 		foreach($request['attr_name'] as $key => $_)
 		{
 			$attr = new data_attribute;
 			$attr->data_id = $data->id;
 			$attr->name= $request['attr_name'][$key];
 			$attr->value= $request['attr_value'][$key];
-			$attr->type = 'text';
+			
+			if(isset($request['attr_file'][$key])&& $request['attr_file'][$key] ){  // have one file
+				$file = $request['attr_file'][$key];
+				$extension = $file->getClientOriginalExtension();
+				$file_name = strval(time()).str_random(5).'.'.$extension;
+				
+				Storage::disk('public')->put($file_name,  File::get($file));
+				$attr->file = $file->getClientOriginalName();
+				$attr->url = Storage::url($file_name);
+				
+				if (in_array(strtolower($extension), $supported_image)) {
+					$attr->type = 'image';
+				} else {
+					$attr->type = 'file';
+				}	
+			}
+			else if($request['attr_zip'][$key]){  // have multiple file
+				$filename = explode("/",$request['attr_zip'][$key]);
+				$attr->file = $filename[count($filename)-1];
+				$attr->url = $request['attr_zip'][$key];
+				$attr->type = 'file';
+			}
+			else{
+				$attr->type = 'text';
+			}
 			$attr->save();
 		}
-		/*
-		if (Input::hasFile('upload_file')) {
-			
-			$file = Input::file('upload_file');
-			$extension = $file->getClientOriginalExtension();
-			$file_name = strval(time()).str_random(5).'.'.$extension;
-			
-			Storage::disk('public')->put($file_name,  File::get($file));
-			// echo "img upload success!";
-			
-			$data->file = $file->getClientOriginalName();
-			$data->url = Storage::url($file_name);
-			
-			$supported_image = array(
-				'gif',
-				'jpg',
-				'jpeg',
-				'png'
-			);
-			if (in_array(strtolower($extension), $supported_image)) {
-				$data->type = 'image';
-			} else {
-				$data->type = 'file';
-			}
-		} else {
-			// echo "img upload failed!";
-			$data->type = 'text';
-		}
-		*/
 		
 		return redirect('/add?select='.$request['category_id']);
+	}
+		
+	public function addZip(Request $request)
+	{
+		$fname = hash('crc32', time()).'.zip';
+		$file = Input::file('data');
+		Storage::disk('public')->put($fname,  File::get($file));
+		return Storage::url($fname);
 	}
 		
 	public function editDataPage($id)
@@ -197,24 +207,70 @@ class DataController extends Controller
 		
 		$data->category_id = $request['category_id'];
 		$data->semester = $request['semester'];
+		$data->name = $request['name'];
 		$data->year =  $request['year'];		
 		$data->month =  $request['month'];	
 		$data->save();
 		
+		$supported_image = array(
+			'gif',
+			'jpg',
+			'jpeg',
+			'png'
+		);
+		
 		$old_attr = data_attribute::where('data_id',$data->id)->get();
-		foreach($old_attr as $a)
-		{
-			$a->delete();
-		}
+		$update_list = [];
 		
 		foreach($request['attr_name'] as $key => $_)
 		{
-			$attr = new data_attribute;
-			$attr->data_id = $data->id;
-			$attr->name= $request['attr_name'][$key];
-			$attr->value= $request['attr_value'][$key];
-			$attr->type = 'text';
-			$attr->save();
+			if(isset($request['attr_id'][$key])&&$request['attr_id'][$key]) // 舊有屬性
+			{
+				array_push($update_list,$request['attr_id'][$key]);
+				$attr = data_attribute::find($request['attr_id'][$key]); 
+				$attr->name= $request['attr_name'][$key];
+				$attr->value= $request['attr_value'][$key];
+				$attr->save();
+
+			}
+			else // 新屬性
+			{
+				$attr = new data_attribute;
+				$attr->data_id = $data->id;
+				$attr->name= $request['attr_name'][$key];
+				$attr->value= $request['attr_value'][$key];
+				if(isset($request['attr_file'][$key])&& $request['attr_file'][$key] ){  // have one file
+					$file = $request['attr_file'][$key];
+					$extension = $file->getClientOriginalExtension();
+					$file_name = strval(time()).str_random(5).'.'.$extension;
+					Storage::disk('public')->put($file_name,  File::get($file));
+					$attr->file = $file->getClientOriginalName();
+					$attr->url = Storage::url($file_name);
+					if (in_array(strtolower($extension), $supported_image)) {
+						$attr->type = 'image';
+					} else {
+						$attr->type = 'file';
+					}	
+				}
+				else if($request['attr_zip'][$key]){  // have multiple file
+					$filename = explode("/",$request['attr_zip'][$key]);
+					$attr->file = $filename[count($filename)-1];
+					$attr->url = $request['attr_zip'][$key];
+					$attr->type = 'file';
+				}
+				else{
+					$attr->type = 'text';
+				}
+				$attr->save();
+			}
+		}
+		
+		foreach($old_attr as $a)
+		{
+			if(in_array($a->id,$update_list)){continue;}
+			else{
+				self::deleteDataAttr($a->id);
+			}
 		}
 		
 		return redirect('/add?select='.$request['category_id']);
@@ -276,7 +332,11 @@ class DataController extends Controller
 		{
 			data::where('category_id',$child->id)->delete();
 		}
-		data::where('category_id',$c_id)->delete();
+		$data = data::where('category_id',$c_id)->get();
+		foreach($data as $d)
+		{
+			self::deleteData($d->id);
+		}
 		
 		/* delete category */
 		category::where('parent_id',$c_id)->delete();
@@ -317,7 +377,11 @@ class DataController extends Controller
 	public function deleteDataAttr($id)
 	{
 		$attr = data_attribute::find($id);
-		$attr->delete();
+		if($attr)
+		{
+			File::delete(substr($attr->url, 1));
+			$attr->delete();	
+		}
 		return ;
 	}
 	
@@ -326,16 +390,14 @@ class DataController extends Controller
 		$attrs = data_attribute::where('data_id',$id)->get();
 		foreach($attrs as $a)
 		{
-			$a->delete();
+			self::deleteDataAttr($a->id);
 		}
 		
 		$cate_id = 0;
 		$data = data::find($id);
 		if($data)
 		{
-			$cate_id = $data->category_id;
-			File::delete(substr($data->url, 1));
-			
+			$cate_id = $data->category_id;			
 			$data->delete();
 		}
 
@@ -346,9 +408,20 @@ class DataController extends Controller
 	{
 		$offices = office::all();
 		$semesters = semester::all();
+		$semesters_year = [];
+		foreach($semesters as $s)
+		{
+			array_push($semesters_year,explode('-',$s->value)[0]);
+		}
+		$semesters_year = array_unique($semesters_year);
+		$year = data::select('year')->distinct()->get();
+		$month = data::select('month')->distinct()->get();
 		
 		return view('search',[ 'offices' => $offices,
-							   'semesters' => $semesters ]);
+							   'semesters' => $semesters,
+							   'year' => $year,
+							   'month' => $month,
+							   'semesters_year' => $semesters_year]);
 	}	
 	
 	public function searchGet(Request $request)
@@ -358,6 +431,7 @@ class DataController extends Controller
 										,'data_attribute.name'
 										,'data_attribute.value'
 										,'data_attribute.file'
+										,'data_attribute.url'
 										,'data_attribute.type'
 										,'data.name AS data_name'
 										,'category_id'
@@ -374,17 +448,34 @@ class DataController extends Controller
 			$builder = $builder->where(function($q)use($request){
 				$q->where('data_attribute.name','like','%'.$request['keyword'].'%')
 				->orWhere('data_attribute.value','like','%'.$request['keyword'].'%')
-				->orWhere('data_attribute.file','like','%'.$request['keyword'].'%');
+				->orWhere('data_attribute.file','like','%'.$request['keyword'].'%')
+				->orWhere('data.name','like','%'.$request['keyword'].'%');
 			});
-		}
-		if( isset($request['semester']) )
-		{
-			$builder = $builder->whereIn('semester',$request['semester']);
 		}
 		if( isset($request['office']) )
 		{
 			$builder = $builder->whereIn('office',$request['office']);
-		}			
+		}		
+		if( isset($request['semester']) )
+		{
+			$builder = $builder->whereIn('semester',$request['semester']);
+		}	
+		if( isset($request['semester_year']) )
+		{
+			$builder = $builder->where(function($q)use($request){
+				for($i=0;$i<count($request['semester_year']);$i++){
+					$q->orWhere('semester','like','%'.$request['semester_year'][$i].'%');
+				}
+			});
+		}	
+		if( isset($request['year']) )
+		{
+			$builder = $builder->whereIn('year',$request['year']);
+		}	
+		if( isset($request['month']) )
+		{
+			$builder = $builder->whereIn('month',$request['month']);
+		}	
 	
 		
 		// page

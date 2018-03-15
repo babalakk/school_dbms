@@ -44,8 +44,8 @@ class CreateTables extends Migration
 			$table->increments('id');
 			$table->integer('category_id')->unsigned();
 			$table->string('semester',100);
-			$table->integer('year')->unsigned();
-			$table->integer('month')->unsigned();
+			$table->integer('year')->unsigned()->nullable();
+			$table->integer('month')->unsigned()->nullable();
 			$table->string('name');
 			$table->timestamps();
 		});				

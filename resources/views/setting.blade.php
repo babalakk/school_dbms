@@ -46,6 +46,29 @@ function del_user(id,name)
 
 
 @include('includes.header')
+<h2 class='setting_title'>學年度列表</h2>
+<div style='margin-left:5%;margin-right:5%;'>
+	<form action='/setting/add_semester' method='post' onsubmit='return confirm("新增學年度之後就不可被刪除，是否新增？")'>
+		<span>新增學年度</span>
+		<input type='number' min='0' name='semester_year' style='width:50px;' required />
+		<select name='semester_section' required>
+			<option>1</option>
+			<option>2</option>
+			<option>暑</option>
+		</select>
+		{{ csrf_field() }}		
+		<input type='submit' value='送出'/>
+	</form>
+	<br>
+	@foreach($semester as $k => $s)
+	<b>
+		{{$s->value}}
+		@if($k < (count($semester)-1) )
+			、
+		@endif
+	</b>
+	@endforeach
+</div>
 
 <h2 class='setting_title'>帳號管理</h2>
 <div id="user">

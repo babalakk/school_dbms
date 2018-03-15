@@ -23,7 +23,7 @@
 	$(function(){
 		$('.option').click(function(){
 			selected = $(this);
-			cid = $(this).attr('c_id');
+			//c_id = $(this).attr('c_id');
 			$('.option').each(function(){
 				$(this).css('color','#555555');
 			});
@@ -107,9 +107,7 @@
 			});	
 		});
 		$('.hide').hide();
-		$( ('.option[c_id='+c_id+']') ).closest('.list').siblings('ul').css('display','block');
-		$( ('.option[c_id='+c_id+']') ).closest('.list').css('display','block');
-		$( ('.option[c_id='+c_id+']') ).closest('.list2').css('display','block');
+		$( ('.option[c_id='+c_id+']') ).parent().parent().siblings('.office').click();
 		$( ('.option[c_id='+c_id+']') ).click();
 	});
 	
