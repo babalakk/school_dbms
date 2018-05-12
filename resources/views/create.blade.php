@@ -141,6 +141,21 @@
 			}
 		});	
 	}
+	
+	function duplicate(id){
+		$.ajax({
+			url:'/add/duplicate/'+id,
+			type:'get',
+			dataType:'html',
+			success: function(data){
+				$('#ct-ct').html(data);
+			},
+			error: function(xhr,ajaxOptions,thrownError){
+				alert(xhr.status);
+				alert(thrownError);
+			}
+		});	
+	}
 </script>
 @include('includes.header')
 <div id="category">

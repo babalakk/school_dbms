@@ -195,29 +195,6 @@ class DataController extends Controller
 								'category_name'=>$category->name,
 								'semesters'=>$semesters]);
 	}
-	
-	public function duplicateData($id)
-	{
-		$origin_data = data::find($id);
-		if(!$origin_data){return "server error";}
-		$data = $origin_data->replicate();
-		$data->month+=1;
-		if($data->month==13){
-			$data->month=1;
-			$data->year+=1;
-		}
-		$data->save();
-		$origin_attr = data_attribute::where('data_id',$origin_data->id)->get();
-		foreach($origin_attr as $o){
-			$n = $o->replicate();
-			$n->data_id = $data->id;
-			$n->value = "";
-			$n->file = "";
-			$n->url = "";
-			$n->save();
-		}
-		return $this->editDataPage($data->id);
-	}
 		
 	public function editData(Request $request,$id)
 	{
@@ -503,6 +480,10 @@ class DataController extends Controller
 		
 		// page
 		$count = $builder->count();
+		if( isset($request['limit']) &&  isset($request['page']) )
+		{
+			$builder = $builder->offset( ($request['page']-1)*$request['limit'] )->limit( $request['limit'] );
+		}
 		
 		//echo $builder->toSql();
 		$result = $builder->get();
@@ -524,6 +505,7 @@ class DataController extends Controller
 		}
 		
 		return view('search_data',[ 'data' => $result,
+									'limit' => $request['limit']?$request['limit']:30,
 									'page' => $request['page'],
 									'count' => $count ]);
 									

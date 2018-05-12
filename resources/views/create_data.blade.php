@@ -15,6 +15,7 @@
 				<td>{{$d->name}}</td>
 				<td>
 					<button onclick='editData({{$d->id}});' >編輯</button>
+					<button onclick='duplicate({{$d->id}});' >新增副本</button>
 					<button onclick={window.location='/add/delete_data/{{ $d->id }}'} >刪除</button>
 				</td>
 			</tr>

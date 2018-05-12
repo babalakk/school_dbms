@@ -11,6 +11,7 @@
 |
 */
 
+// Main page
 Route::get('/', function () {return redirect('/main');});
 Route::get('/login',function () {return view('login');});
 Route::post('/login','UserController@login');
@@ -18,11 +19,13 @@ Route::get('/logout','UserController@logout');
 Route::get('/main',function () {
 	return (Session::get('user_name')=='')?redirect('login'):view('main');
 	});
+	
+// Search page
 Route::get('/search','DataController@search');
 Route::get('/search/get','DataController@searchGet');
 Route::get('/search/export','DataController@searchExport');
 
-
+// Add page
 Route::get('/add','DataController@view');
 Route::get('/add/new_category/{office}/{parent_id}','DataController@newCategory');
 Route::get('/add/new_office','DataController@newOffice');
@@ -39,7 +42,9 @@ Route::get('/add/delete_data/{id}','DataController@deleteData');
 Route::get('/add/delete_data_attr/{id}','DataController@deleteDataAttr');
 Route::get('/add/delete_office/{office}','DataController@deleteOffice');
 Route::get('/getdata','DataController@getData');
+Route::get('/add/duplicate/{id}','DataController@duplicateData');
 
+// Setting page
 Route::get('/setting','UserController@setting');
 Route::post('/setting/add_semester','UserController@addSemester');
 Route::post('/setting/add_user','UserController@addUser');

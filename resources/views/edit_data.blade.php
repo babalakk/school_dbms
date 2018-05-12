@@ -20,8 +20,10 @@
 		@endif
 	@endforeach
 	</select>
-	<span>年</span><input type='number' name='year' value="{{$data->year}}" min='0' style='width:50px;' />
-	<span>月</span><input type='number' name='month' value="{{$data->month}}" min='1' max='12' /><br>	
+	<br>
+	<span>年份</span><input type='number' name='year' value="{{$data->year}}" min='0' style='width:50px;' />
+	<span>月份</span><input type='number' name='month' value="{{$data->month}}" min='1' max='12' />
+	<br>	
 	<br>
 	<table id='attr_table'>
 		<tbody>

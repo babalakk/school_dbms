@@ -890,24 +890,28 @@ ul .sb-lvl-1-cat .sb-lv2 {
 
 .info {
 	text-align: center;
+	margin:30px;
 }
 
 .info div {
 	display:inline-block;
-	margin-left:100px;
+	#margin-left:100px;
 }
 
 .table-fill {
   background: white;
   border-radius:3px;
   border-collapse: collapse;
-  margin: auto;
   max-width: 1000px;
   padding:5px;
-  width: 100%;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
   animation: float 5s infinite;
   margin-top:30px;
+}
+
+#table-div{
+  max-width: 1000px;
+  margin: auto;
 }
  
 th {
@@ -1120,4 +1124,12 @@ button:hover {
 
 .setting_title {
 	margin-left:30px;
+}
+
+.group-start td {
+	background: #c4d3ff !important;
+}
+
+.group-end td {
+	background: #9ca8cc !important;
 }
