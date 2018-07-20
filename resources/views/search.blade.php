@@ -14,8 +14,7 @@
 	<script type="text/javascript" src="https://code.highcharts.com/highcharts.js"></script>
 	<script type="text/javascript" src="http://code.highcharts.com/modules/exporting.js"></script>
 	<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
-</head>
-<script>
+<script type="text/javascript">
 var office_filter = [];
 var semester_filter = [];
 var semester_year_filter = [];
@@ -53,11 +52,11 @@ function divideTable(table){
   return tables;
 }
 function setTableEvents(table) {
-  table.on("page", () => {
+  table.on("page", function(){
     draw = true;
   });
  
-  table.on("draw", () => {
+  table.on("draw", function(){
     if (draw) {
       draw = false;
     } else {
@@ -139,7 +138,7 @@ function createCharts(data){
   });
 
 }
-function search_fn()
+function search()
 {
 	$.ajax({
 		url:'/search/get',
@@ -200,7 +199,7 @@ function search_fn()
 		}
 	});	
 }
-var search = search_fn;
+//var search = search_fn;
 
 function add(self,filter)
 {
@@ -307,6 +306,7 @@ function excel(){
 });
 }
 </script>
+</head>
 <body>
 @include('includes.header')
 
@@ -358,6 +358,5 @@ function excel(){
 <div id='data'>
 </div>
 
-</div>
 </body>
 </html>

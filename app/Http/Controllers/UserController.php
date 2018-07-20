@@ -110,8 +110,14 @@ class UserController extends Controller
 	
 	public function addSemester(Request $request)
 	{
-		//check duplicate
-		$value = $request['semester_year'].'-'.$request['semester_section'];
+		if($request['semester_section']!=""){
+			$value = $request['semester_year'].'-'.$request['semester_section'];
+		}else{
+			$value = $request['semester_year'];
+
+		}
+		
+		//check duplicate and save
 		if(!semester::where('value','=',$value)->exists())
 		{
 			$semester = new semester;

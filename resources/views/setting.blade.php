@@ -55,6 +55,7 @@ function del_user(id,name)
 			<option>1</option>
 			<option>2</option>
 			<option>暑</option>
+			<option></option>
 		</select>
 		{{ csrf_field() }}		
 		<input type='submit' value='送出'/>

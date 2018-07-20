@@ -1,12 +1,15 @@
 <div>
-	<table>
-		<tr>
-			<th width=70>學年度</th>
-			<th width=50>年分</th>
-			<th width=50>月份</th>
-			<th width=200>項目</th>
-			<th width=120>動作</th>
-		</tr>
+	<table id="data_table">
+		<thead>
+			<tr>
+				<th width=70>學年度</th>
+				<th width=50>年分</th>
+				<th width=50>月份</th>
+				<th width=350>項目</th>
+				<th width=200>動作</th>
+			</tr>
+		</thead>
+		<tbody>
 		@foreach($data as $d)
 			<tr>
 				<td>{{$d->semester}}</td>
@@ -20,5 +23,6 @@
 				</td>
 			</tr>
 		@endforeach
+		</tbody>
 	</table>
 </div>
