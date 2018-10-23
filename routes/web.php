@@ -67,3 +67,7 @@ Route::get('/storage/{filename}', function ($filename)
 
     return $response;
 });
+
+// Database import
+Route::get('/db_import','DataController@dbImport');
+Route::post('/db_import','DataController@dbImport');

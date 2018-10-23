@@ -568,4 +568,162 @@ class DataController extends Controller
 		
 		return json_encode($result);
 	}
+	
+	public function dbImport(Request $request){
+		
+		$data = [
+			'upload' => false,
+			'file_content' => ''
+		];
+		
+		if(isset($request['file'])&& $request['file']){
+			$data['upload'] = true;
+			
+			setlocale(LC_ALL, 'en_US.UTF-8');
+			
+			$file = fopen($_FILES['file']['tmp_name'],"r");
+			$_ = $this->__fgetcsv($file,0,",");
+			$semester_i = 0;
+			$year_i = 1;
+			$month_i = 2;
+			$office_i = 3;
+			$cate1_i = 4;
+			$cate2_i = 5;
+			$dataname_i = 6;
+			$attri_i = 7;
+			$value_i = 8;
+			// Check file
+			while($line = $this->__fgetcsv($file,0,","))
+			{	
+				// request field
+				if($line[$semester_i]=="" 
+				|| $line[$office_i]=="" 
+				|| $line[$cate1_i]=="" 
+				|| $line[$dataname_i]=="" 
+				|| $line[$attri_i]=="" 
+				|| $line[$value_i]=="" ){
+					echo "error line: ";
+					print_r($line);
+					die("file error");
+				}
+				
+			}
+			fseek($file, 0);
+			$_ = $this->__fgetcsv($file,0,",");
+			// Insert DB
+			while($line = $this->__fgetcsv($file,0,","))
+			{
+				if(count(semester::where('value',$line[$semester_i])->get())==0)
+				{
+					$_s = new semester;
+					$_s->value = $line[$semester_i];
+					$_s->save();
+					echo "add semester: ";
+				}
+				$_c_id = 0;
+				$_c1 = category::where([["office","=",$line[$office_i]]
+										,["name","=",$line[$cate1_i]]
+										,["parent_id","=",0]])->get();
+				if(count($_c1)==0)
+				{
+					$_c1 = new category;
+					$_c1->name = $line[$cate1_i];
+					$_c1->parent_id = 0;
+					$_c1->save();
+					echo "add cate1: ";
+				}else{
+					$_c1 = $_c1[0];
+				}
+				$_c_id = $_c1->id;
+				if($line[$cate2_i]!=""){
+					$_c2 = category::where([["office","=",$line[$office_i]]
+											,["name","=",$line[$cate2_i]]
+											,["parent_id","=",$_c1->id]])->get();
+					if(count($_c2)==0){
+						$_c2 = new category;
+						$_c2->name = $line[$cate2_i];
+						$_c2->parent_id = $_c1->id;
+						$_c2->save();
+						echo "add cate2: ";
+					}else{
+						$_c2 = $_c2[0];
+					}
+					$_c_id = $_c2->id;
+				}
+				$_d = data::where([["category_id","=",$_c_id]
+									,["semester","=",$line[$semester_i]]
+									,["name","=",$line[$dataname_i]]]);
+				if($line[$year_i]!=""){
+					$_d = $_d->where("year",$line[$year_i]);
+				}else{
+					$_d = $_d->whereNull("year");	
+				}
+				if($line[$month_i]!=""){
+					$_d = $_d->where("month",$line[$month_i]);
+				}else{
+					$_d = $_d->whereNull("month");
+				}
+				$_d = $_d->get();		
+				if(count($_d)==0){
+					$_d = new data;
+					$_d->category_id = $_c_id;
+					$_d->semester = $line[$semester_i];
+					$_d->name = $line[$dataname_i];
+					if($line[$year_i]!=""){$_d->year = $line[$year_i];}
+					if($line[$month_i]!=""){$_d->month = $line[$month_i];}
+					$_d->save();
+					echo "add data: ";
+				}
+				else{
+					$_d = $_d[0];
+				}
+				$_a = data_attribute::where([["data_id","=",$_d->id],["name","=",$line[$attri_i]]])->get();
+				if(count($_a)==0){
+					$_a = new data_attribute;
+					$_a->data_id = $_d->id;					
+					$_a->name = $line[$attri_i];
+				}else{
+					$_a = $_a[0];
+				}
+				$_a->value = $line[$value_i];
+				$_a->type = "text";
+				$_a->save();
+			}
+			
+			$data['file_content'] = "upload";
+			fclose($file);
+		}else{
+			// not upload
+		}
+		
+		return view('db_import',['data' => $data]);
+									
+	}
+	
+	public function __fgetcsv(&$handle, $length = null, $d = ",", $e = '"') {
+	 $d = preg_quote($d);
+	 $e = preg_quote($e);
+	 $_line = "";
+	 $eof=false;
+	 while ($eof != true) {
+	 $_line .= (empty ($length) ? fgets($handle) : fgets($handle, $length));
+	 $itemcnt = preg_match_all('/' . $e . '/', $_line, $dummy);
+	 if ($itemcnt % 2 == 0){
+	 $eof = true;
+	 }
+	 }
+	 
+	 $_csv_line = preg_replace('/(?: |[ ])?$/', $d, trim($_line));
+	 
+	 $_csv_pattern = '/(' . $e . '[^' . $e . ']*(?:' . $e . $e . '[^' . $e . ']*)*' . $e . '|[^' . $d . ']*)' . $d . '/';
+	 preg_match_all($_csv_pattern, $_csv_line, $_csv_matches);
+	 $_csv_data = $_csv_matches[1];
+	 
+	 for ($_csv_i = 0; $_csv_i < count($_csv_data); $_csv_i++) {
+	 $_csv_data[$_csv_i] = preg_replace("/^" . $e . "(.*)" . $e . "$/s", "$1", $_csv_data[$_csv_i]);
+	 $_csv_data[$_csv_i] = str_replace($e . $e, $e, $_csv_data[$_csv_i]);
+	 }
+	 
+	 return empty ($_line) ? false : $_csv_data;
+	}
 }
